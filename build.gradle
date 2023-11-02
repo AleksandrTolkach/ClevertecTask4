@@ -18,14 +18,28 @@ repositories {
 ext {
     junitVersion = '5.9.2'
     mockitoVersion = '5.6.0'
+    mapstructVersion = "1.5.5.Final"
 }
 
 dependencies {
+    implementation 'org.mapstruct:mapstruct:1.5.5.Final'
+    implementation 'org.apache.commons:commons-lang3:3.12.0'
+
     testImplementation "org.mockito:mockito-junit-jupiter:${mockitoVersion}"
 
     testImplementation 'org.assertj:assertj-core:3.24.2'
     testImplementation("org.junit.jupiter:junit-jupiter-api:${junitVersion}")
     testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:${junitVersion}")
+    testImplementation 'org.junit.jupiter:junit-jupiter-params:5.9.2'
+
+    annotationProcessor 'org.mapstruct:mapstruct-processor:1.5.5.Final'
+
+}
+
+tasks.withType(JavaCompile) {
+    options.compilerArgs = [
+            '-Amapstruct.suppressGeneratorTimestamp=true'
+    ]
 }
 
 test {
