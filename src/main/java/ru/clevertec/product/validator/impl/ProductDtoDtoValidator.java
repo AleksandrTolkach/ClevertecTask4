@@ -3,6 +3,8 @@ package ru.clevertec.product.validator.impl;
 import java.math.BigDecimal;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import lombok.AccessLevel;
+import lombok.NoArgsConstructor;
 import org.apache.commons.lang3.StringUtils;
 import ru.clevertec.product.data.ProductDto;
 import ru.clevertec.product.entity.Product.Fields;
@@ -14,11 +16,13 @@ import ru.clevertec.product.validator.Validator;
 /**
  * Класс для валидации ProductDto.
  */
+@NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class ProductDtoDtoValidator implements Validator<ProductDto> {
 
   public static final String PRODUCT = "ProductDto";
   private static final String NAME_REGEX = "(^[\\p{IsCyrillic}+| ]{5,10}$)";
   private static final String DESCRIPTION_REGEX = "(^[\\p{IsCyrillic}+| ]{10,30}$)";
+  private static final Validator<ProductDto> instance = new ProductDtoDtoValidator();
 
   @Override
   public void validate(ProductDto productDto) {
@@ -64,5 +68,9 @@ public class ProductDtoDtoValidator implements Validator<ProductDto> {
             ValidationMessage.FIELD_WRONG_SYMBOL));
       }
     }
+  }
+
+  public static Validator<ProductDto> getInstance() {
+    return instance;
   }
 }

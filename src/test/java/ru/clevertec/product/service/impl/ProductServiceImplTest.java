@@ -4,21 +4,28 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static ru.clevertec.product.ValidationTestData.getValidationExceptionList;
 
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.MockedStatic;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.junit.jupiter.MockitoSettings;
+import org.mockito.quality.Strictness;
 import ru.clevertec.product.ProductTestData;
 import ru.clevertec.product.data.InfoProductDto;
 import ru.clevertec.product.data.ProductDto;
@@ -28,27 +35,57 @@ import ru.clevertec.product.exception.ProductNotFoundException;
 import ru.clevertec.product.exception.ValidationExceptionList;
 import ru.clevertec.product.mapper.ProductMapper;
 import ru.clevertec.product.repository.ProductRepository;
+import ru.clevertec.product.repository.impl.InMemoryProductRepository;
 import ru.clevertec.product.validator.ValidationMessage;
 import ru.clevertec.product.validator.Validator;
 import ru.clevertec.product.validator.impl.ProductDtoDtoValidator;
 
 @ExtendWith(MockitoExtension.class)
+@MockitoSettings(strictness = Strictness.LENIENT)
 public class ProductServiceImplTest {
 
-  @InjectMocks
   private ProductServiceImpl productService;
   @Mock
   private ProductMapper productMapper;
   @Mock
   private ProductRepository productRepository;
+  private MockedStatic<InMemoryProductRepository> productRepositoryMockedStatic;
   @Mock
   private Validator<ProductDto> productDtoValidator;
+  private MockedStatic<ProductDtoDtoValidator> validatorMockedStatic;
   @Captor
   private ArgumentCaptor<Product> productCaptor;
   private Product product = ProductTestData.builder().build().buildProduct();
   private ProductDto productDto = ProductTestData.builder().build().buildProductDto();
   private InfoProductDto infoProductDto = ProductTestData.builder().build().buildInfoProductDto();
   private UUID id = product.getUuid();
+  private String PRODUCT_NOT_FOUND_MESSAGE = String.format("Product with uuid: %s not found", id);
+
+  @BeforeEach
+  public void setUp() throws NoSuchMethodException, InvocationTargetException,
+      InstantiationException, IllegalAccessException {
+    productRepositoryMockedStatic = mockStatic(InMemoryProductRepository.class);
+    productRepositoryMockedStatic
+        .when(InMemoryProductRepository::getInstance)
+        .thenReturn(productRepository);
+
+    validatorMockedStatic = mockStatic(ProductDtoDtoValidator.class);
+    validatorMockedStatic
+        .when(ProductDtoDtoValidator::getInstance)
+        .thenReturn(productDtoValidator);
+
+    Constructor<ProductServiceImpl> privateConstructor = ProductServiceImpl.class
+        .getDeclaredConstructor();
+    privateConstructor.setAccessible(true);
+
+    productService = privateConstructor.newInstance();
+  }
+
+  @AfterEach
+  public void cleanUp() {
+    productRepositoryMockedStatic.close();
+    validatorMockedStatic.close();
+  }
 
   @Test
   public void getTestShouldReturnInfoProductDto() {
@@ -76,7 +113,8 @@ public class ProductServiceImplTest {
 
     // when, then
     assertThatThrownBy(() -> productService.get(id))
-        .isInstanceOf(ProductNotFoundException.class);
+        .isInstanceOf(ProductNotFoundException.class)
+        .hasMessage(PRODUCT_NOT_FOUND_MESSAGE);
   }
 
   @Test
@@ -249,13 +287,13 @@ public class ProductServiceImplTest {
     doNothing()
         .when(productDtoValidator)
         .validate(productDto);
-
-    doThrow(ProductNotFoundException.class)
-        .when(productRepository).findById(id);
+    when(productRepository.findById(id))
+        .thenReturn(Optional.empty());
 
     // when, then
     assertThatThrownBy(() -> productService.update(id, productDto))
-        .isInstanceOf(ProductNotFoundException.class);
+        .isInstanceOf(ProductNotFoundException.class)
+        .hasMessage(PRODUCT_NOT_FOUND_MESSAGE);
   }
 
   @Test

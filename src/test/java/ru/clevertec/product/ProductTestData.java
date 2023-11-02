@@ -3,7 +3,6 @@ package ru.clevertec.product;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.UUID;
-import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Data;
 import lombok.experimental.Accessors;

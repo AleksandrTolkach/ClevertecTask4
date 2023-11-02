@@ -1,9 +1,12 @@
 package ru.clevertec.product.mapper;
 
+import org.mapstruct.Mapper;
+import org.mapstruct.MappingTarget;
 import ru.clevertec.product.data.InfoProductDto;
 import ru.clevertec.product.data.ProductDto;
 import ru.clevertec.product.entity.Product;
 
+@Mapper
 public interface ProductMapper {
 
     /**
@@ -30,5 +33,5 @@ public interface ProductMapper {
      * @param productDto информация для обновления
      * @return обновлённый продукт
      */
-    Product merge(Product product, ProductDto productDto);
+    Product merge(@MappingTarget Product product, ProductDto productDto);
 }

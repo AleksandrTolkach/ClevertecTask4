@@ -8,10 +8,11 @@ import ru.clevertec.product.data.InfoProductDto;
 import ru.clevertec.product.data.ProductDto;
 import ru.clevertec.product.entity.Product;
 import ru.clevertec.product.mapper.ProductMapper;
+import ru.clevertec.product.mapper.ProductMapperImpl;
 
 public class ProductMapperImplTest {
 
-  private ProductMapper productMapper = ProductMapperImpl.getInstance();
+  private ProductMapper productMapper = new ProductMapperImpl();
   private Product product = ProductTestData.builder().build().buildProduct();
   private InfoProductDto infoProductDto = ProductTestData.builder().build().buildInfoProductDto();
   private ProductDto productDto = ProductTestData.builder().build().buildProductDto();
